@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vaultline — Password Security Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="grain"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">◈</span>
+    <div class="brand-text">
+      <span class="brand-name">Vaultline</span>
+      <span class="brand-tag">Password Security Analyzer</span>
+    </div>
+  </div>
+  <p class="topbar-note">Everything below runs locally in your browser. Nothing is sent anywhere.</p>
+</header>
+
+<main class="layout">
+
+  <!-- ANALYZER PANEL -->
+  <section class="panel analyzer" aria-labelledby="analyzer-heading">
+    <div class="panel-head">
+      <span class="eyebrow">01 · Diagnose</span>
+      <h2 id="analyzer-heading">Password Analyzer</h2>
+    </div>
+
+    <div class="field-group">
+      <label for="pwd-input">Enter a password</label>
+      <div class="input-row">
+        <input id="pwd-input" type="password" autocomplete="off" spellcheck="false" placeholder="Type or paste a password…" />
+        <button id="toggle-visibility" class="icon-btn" type="button" aria-label="Show password" title="Show / hide password">
+          <svg id="eye-open" viewBox="0 0 24 24" width="20" height="20"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          <svg id="eye-closed" viewBox="0 0 24 24" width="20" height="20" style="display:none"><path d="M3 3l18 18M10.6 10.6a3 3 0 004.24 4.24M9.9 5.1A11 11 0 0123 12s-1.6 2.8-4.4 4.9M6.1 6.6C3.6 8.3 1 12 1 12s2 3.5 5.3 5.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <p id="reuse-warning" class="reuse-warning hidden">⚠ This password matches one already logged on this device. Reused passwords are a weak point.</p>
+    </div>
+
+    <div class="gauge-row">
+      <div class="gauge-wrap">
+        <svg class="gauge" viewBox="0 0 160 160" width="150" height="150">
+          <circle cx="80" cy="80" r="68" class="gauge-track" />
+          <circle id="gauge-fill" cx="80" cy="80" r="68" class="gauge-fill" />
+        </svg>
+        <div class="gauge-center">
+          <span id="score-number">0</span>
+          <span class="gauge-sub">/ 100</span>
+        </div>
+      </div>
+      <div class="rating-block">
+        <span class="eyebrow">Rating</span>
+        <span id="rating-label" class="rating-label">—</span>
+        <div class="strength-track">
+          <div id="strength-fill" class="strength-fill"></div>
+        </div>
+        <p id="crack-time" class="crack-time">Estimated crack time (fast GPU): —</p>
+      </div>
+    </div>
+
+    <div class="checks-grid">
+      <div class="check" id="check-length"><span class="check-dot"></span>Length ≥ 12</div>
+      <div class="check" id="check-upper"><span class="check-dot"></span>Uppercase letter</div>
+      <div class="check" id="check-lower"><span class="check-dot"></span>Lowercase letter</div>
+      <div class="check" id="check-number"><span class="check-dot"></span>Number</div>
+      <div class="check" id="check-special"><span class="check-dot"></span>Special character</div>
+      <div class="check" id="check-common"><span class="check-dot"></span>Not a common password</div>
+      <div class="check" id="check-repeat"><span class="check-dot"></span>No repeated runs</div>
+      <div class="check" id="check-sequence"><span class="check-dot"></span>No sequential pattern</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <span class="stat-label">Length</span>
+        <span id="stat-length" class="stat-value">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Entropy</span>
+        <span id="stat-entropy" class="stat-value">0 bits</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Character pool</span>
+        <span id="stat-pool" class="stat-value">0</span>
+      </div>
+    </div>
+
+    <div class="crack-table">
+      <span class="eyebrow">Crack-time by attack scenario</span>
+      <div class="crack-rows" id="crack-rows"></div>
+    </div>
+
+    <div class="suggestions" id="suggestions-block">
+      <span class="eyebrow">Suggestions</span>
+      <ul id="suggestions-list"></ul>
+    </div>
+  </section>
+
+  <!-- GENERATOR PANEL -->
+  <section class="panel generator" aria-labelledby="generator-heading">
+    <div class="panel-head">
+      <span class="eyebrow">02 · Forge</span>
+      <h2 id="generator-heading">Password Generator</h2>
+    </div>
+
+    <div class="field-group">
+      <div class="row-between">
+        <label for="gen-length">Length</label>
+        <span id="gen-length-value" class="length-value">16</span>
+      </div>
+      <input id="gen-length" type="range" min="6" max="48" value="16" />
+    </div>
+
+    <div class="toggle-list">
+      <label class="toggle"><input type="checkbox" id="gen-upper" checked /><span>Uppercase (A–Z)</span></label>
+      <label class="toggle"><input type="checkbox" id="gen-lower" checked /><span>Lowercase (a–z)</span></label>
+      <label class="toggle"><input type="checkbox" id="gen-number" checked /><span>Numbers (0–9)</span></label>
+      <label class="toggle"><input type="checkbox" id="gen-special" checked /><span>Symbols (!@#$…)</span></label>
+      <label class="toggle"><input type="checkbox" id="gen-ambiguous" /><span>Exclude ambiguous (l 1 I O 0)</span></label>
+    </div>
+
+    <button id="generate-btn" class="primary-btn" type="button">Generate password</button>
+
+    <div class="field-group">
+      <label for="gen-output">Result</label>
+      <div class="input-row">
+        <input id="gen-output" type="text" readonly placeholder="Your generated password will appear here" />
+        <button id="copy-btn" class="icon-btn" type="button" aria-label="Copy password" title="Copy to clipboard">
+          <svg viewBox="0 0 24 24" width="18" height="18"><rect x="9" y="9" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 15V5a2 2 0 012-2h10" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        </button>
+      </div>
+      <span id="copy-note" class="copy-note hidden">Copied to clipboard</span>
+    </div>
+
+    <button id="use-btn" class="ghost-btn" type="button">Send to analyzer ↑</button>
+
+    <div class="history-block">
+      <div class="row-between">
+        <span class="eyebrow">Local history</span>
+        <button id="clear-history" class="link-btn" type="button">Clear</button>
+      </div>
+      <p class="history-note">Vaultline keeps a SHA-256 fingerprint of passwords you've analyzed on this device — never the password itself — so it can warn you about reuse. <span id="history-count">0</span> fingerprint(s) stored.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <p>Vaultline runs entirely client-side. No password ever leaves this browser tab.</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
