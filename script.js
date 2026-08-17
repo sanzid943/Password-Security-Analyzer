@@ -1,7 +1,6 @@
 (() => {
   "use strict";
 
-  /* ============ DOM refs ============ */
   const pwdInput        = document.getElementById("pwd-input");
   const toggleVisBtn     = document.getElementById("toggle-visibility");
   const eyeOpen          = document.getElementById("eye-open");
@@ -38,9 +37,8 @@
   const clearHistoryBtn  = document.getElementById("clear-history");
   const historyCountEl   = document.getElementById("history-count");
 
-  const GAUGE_CIRC = 2 * Math.PI * 68; // matches r=68 in svg
+  const GAUGE_CIRC = 2 * Math.PI * 68;
 
-  /* ============ Common password list (sample of frequently breached passwords) ============ */
   const COMMON_PASSWORDS = new Set([
     "123456","password","123456789","12345678","12345","qwerty","abc123",
     "password1","111111","123123","letmein","welcome","admin","iloveyou",
@@ -56,14 +54,12 @@
 
   const KEYBOARD_ROWS = ["qwertyuiop","asdfghjkl","zxcvbnm","1234567890"];
 
-  /* ============ Char sets ============ */
   const SET_LOWER = "abcdefghijklmnopqrstuvwxyz";
   const SET_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const SET_NUMBER = "0123456789";
   const SET_SPECIAL = "!@#$%^&*()_+-=[]{}|;:,.<>?/~`";
   const AMBIGUOUS = "l1IO0";
 
-  /* ============ Helpers ============ */
   function hasLower(s){ return /[a-z]/.test(s); }
   function hasUpper(s){ return /[A-Z]/.test(s); }
   function hasNumber(s){ return /[0-9]/.test(s); }
@@ -85,7 +81,7 @@
   }
 
   function hasRepeatedRun(s){
-    return /(.)\1{2,}/.test(s); // same char 3+ times in a row
+    return /(.)\1{2,}/.test(s);
   }
 
   function hasSequentialPattern(s){
@@ -133,7 +129,7 @@
   ];
 
   function crackSeconds(entropy, rate){
-    const guesses = Math.pow(2, entropy) / 2; // average case
+    const guesses = Math.pow(2, entropy) / 2;
     return guesses / rate;
   }
 
@@ -143,7 +139,6 @@
     return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("");
   }
 
-  /* ============ Local history (fingerprints only, never raw passwords) ============ */
   const HISTORY_KEY = "vaultline_pwd_fingerprints";
 
   function getHistory(){
@@ -172,26 +167,21 @@
     }
   }
 
-  /* ============ Scoring ============ */
   function scorePassword(s){
     if (!s) return 0;
 
     let score = 0;
 
-    // length contribution, up to 30
     score += Math.min(30, s.length * 2.2);
 
-    // variety contribution, 10 each
     if (hasLower(s)) score += 10;
     if (hasUpper(s)) score += 10;
     if (hasNumber(s)) score += 10;
     if (hasSpecial(s)) score += 10;
 
-    // entropy bonus, up to 20
     const entropy = calcEntropy(s);
     score += Math.min(20, entropy / 4);
 
-    // penalties
     if (isCommonPassword(s)) score -= 55;
     if (hasRepeatedRun(s)) score -= 12;
     if (hasSequentialPattern(s)) score -= 12;
@@ -223,7 +213,6 @@
     return tips;
   }
 
-  /* ============ Render ============ */
   function setCheck(el, condition, strongFailColor){
     el.classList.remove("pass", "fail-strong");
     if (condition) {
@@ -240,7 +229,6 @@
     const entropy = calcEntropy(s);
     const pool = poolSize(s);
 
-    // gauge
     const offset = GAUGE_CIRC - (score / 100) * GAUGE_CIRC;
     gaugeFill.style.strokeDashoffset = s ? offset : GAUGE_CIRC;
     gaugeFill.style.stroke = rating.color;
@@ -251,12 +239,10 @@
     strengthFill.style.width = s ? `${score}%` : "0%";
     strengthFill.style.background = rating.color;
 
-    // stats
     statLength.textContent = s.length;
     statEntropy.textContent = `${entropy} bits`;
     statPool.textContent = pool;
 
-    // checks
     setCheck(document.getElementById("check-length"), s.length >= 12);
     setCheck(document.getElementById("check-upper"), hasUpper(s));
     setCheck(document.getElementById("check-lower"), hasLower(s));
@@ -266,13 +252,11 @@
     setCheck(document.getElementById("check-repeat"), s.length > 0 && !hasRepeatedRun(s), true);
     setCheck(document.getElementById("check-sequence"), s.length > 0 && !hasSequentialPattern(s), true);
 
-    // main crack time (fast GPU scenario, matches label under rating)
     const fastSeconds = s ? crackSeconds(entropy, 1e10) : 0;
     crackTimeEl.textContent = s
       ? `Estimated crack time (fast GPU): ${formatDuration(fastSeconds)}`
       : "Estimated crack time (fast GPU): —";
 
-    // crack-time table
     crackRowsEl.innerHTML = "";
     ATTACK_SCENARIOS.forEach(scenario => {
       const row = document.createElement("div");
@@ -282,7 +266,6 @@
       crackRowsEl.appendChild(row);
     });
 
-    // suggestions
     const tips = buildSuggestions(s);
     suggestionsList.innerHTML = "";
     tips.forEach(tip => {
@@ -292,11 +275,9 @@
     });
     suggestionsBlock.classList.toggle("ok", s.length > 0 && score >= 70);
 
-    // history / reuse check
     await checkAndRecordHistory(s);
   }
 
-  /* ============ Visibility toggle ============ */
   toggleVisBtn.addEventListener("click", () => {
     const isPassword = pwdInput.type === "password";
     pwdInput.type = isPassword ? "text" : "password";
@@ -307,7 +288,6 @@
 
   pwdInput.addEventListener("input", () => { analyze(); });
 
-  /* ============ Generator ============ */
   genLength.addEventListener("input", () => {
     genLengthValue.textContent = genLength.value;
   });
@@ -338,7 +318,7 @@
       genOutput.placeholder = "Select at least one character type";
       return;
     }
-    // ensure at least one of each selected type is present
+  
     const mustInclude = [];
     if (genUpper.checked) mustInclude.push(SET_UPPER);
     if (genLower.checked) mustInclude.push(SET_LOWER);
@@ -353,7 +333,7 @@
     while (result.length < length) {
       result.push(pool[secureRandomInt(pool.length)]);
     }
-    // shuffle (Fisher-Yates) using secure randomness
+    
     for (let i = result.length - 1; i > 0; i--) {
       const j = secureRandomInt(i + 1);
       [result[i], result[j]] = [result[j], result[i]];
@@ -393,7 +373,6 @@
     reuseWarning.classList.add("hidden");
   });
 
-  /* ============ Init ============ */
   updateHistoryCount();
   generatePassword();
   analyze();
